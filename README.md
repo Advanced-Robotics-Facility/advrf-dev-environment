@@ -12,8 +12,8 @@ Xenomai provides real-time capabilities by adding a co-kernel to Linux.
 
 Steps:
 ```bash
-git clone https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup.git
-cd xenomai-ethercat-setup/xenomai
+git clone https://github.com/Advanced-Robotics-Facility/advrf-dev-environment.git
+cd advrf-dev-environment/xenomai
 ./prepare.sh
 ```
 
@@ -43,7 +43,7 @@ uname -r
 Run the build script:
 
 ```bash
-./xenomai-ethercat-setup/build_ecat.sh
+./advrf-dev-environment/build_ecat.sh
 ```
 
 Configuration options:
@@ -114,8 +114,8 @@ This section describes how to manually install the EtherCAT Stack on an **Ubuntu
 Run the `create_ws.sh` script to generate the workspace structure:
 
 ```bash
-git clone https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup.git
-./xenomai-ethercat-setup/create_ws.sh [name_ws] [dir_ws, default=HOME]
+git clone https://github.com/Advanced-Robotics-Facility/advrf-dev-environment.git
+./advrf-dev-environment/create_ws.sh [name_ws] [dir_ws, default=HOME]
 ```
 
 Add the generated workspace setup to your shell environment:
@@ -278,8 +278,8 @@ export EC_CFG=~/<workspace_name>/src/ecat-client-advr/config/ec_cfg.yaml
 To install Docker launch the `prepare.sh` file and just choose "install docker" option:
 
 ```bash
-git clone https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup.git
-./xenomai-ethercat-setup/xenomai/prepare.sh
+git clone https://github.com/Advanced-Robotics-Facility/advrf-dev-environment.git
+./advrf-dev-environment/xenomai/prepare.sh
 ```
 
 To build and run everything, you have two paths:
@@ -288,7 +288,7 @@ To build and run everything, you have two paths:
 
 ```bash
 # Xenomai + EtherCAT Stack
-cd xenomai-ethercat-setup/docker
+cd advrf-dev-environment/docker
 DOCKER_BUILDKIT=1 docker compose up --build
 docker exec -it ecat-container /bin/bash
 ```
@@ -297,7 +297,7 @@ docker exec -it ecat-container /bin/bash
 
 ```bash
 # Xenomai Docker Image
-cd xenomai-ethercat-setup/docker
+cd advrf-dev-environment/docker
 docker build -f Dockerfile.xenomai -t xenomai:latest .
 
 # EtherCAT Stack Docker Image inheriting from Xenomai
