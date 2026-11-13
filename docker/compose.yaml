@@ -1,25 +1,49 @@
-# DOCKER_BUILDKIT=1 docker compose up --build
-# docker exec -it ecat-container /bin/bash
 services:
-  ecat:
+  dependencies:
+    image: miranda-dependencies:jazzy
+    platform: linux/amd64
+    profiles: [build]
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.ethercat
-      ssh:
-        default: $SSH_AUTH_SOCK   
-    container_name: ecat-container
-    privileged: true
-    cap_add:
-      - SYS_NICE  
+      context: .
+      dockerfile: Dockerfile.dependencies
+
+  ethercat:
+    image: miranda-ethercat:jazzy
+    platform: linux/amd64
+    profiles: [build]
+    build:
+      context: .
+      dockerfile: Dockerfile.ethercat
+      additional_contexts:
+        dependencies: service:dependencies
+      args:
+        BUILD_JOBS: ${BUILD_JOBS:-4}
+        BUILD_GUI: ${BUILD_GUI:-ON}
+        MASTER_VERSION: ${MASTER_VERSION:-1.0.0}
+
+  workspace:
+    image: miranda-workspace:jazzy
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.ros
+      additional_contexts:
+        ethercat: service:ethercat
+      args:
+        BUILD_JOBS: ${BUILD_JOBS:-4}
+    network_mode: host
     environment:
-      - DEBIAN_FRONTEND=noninteractive
-      - USE_XENO=ON
-      - BUILD_GUI=OFF
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      DISPLAY: ${DISPLAY:-}
+      QT_X11_NO_MITSHM: '1'
+      XAUTHORITY: /tmp/host.xauthority
+    volumes:
+      - ${X11_SOCKET_DIR:-/tmp/.X11-unix}:/tmp/.X11-unix:ro
+      - ${XAUTHORITY:-/dev/null}:/tmp/host.xauthority:ro
+    cap_add:
+      - SYS_NICE
+    ulimits:
+      rtprio: 99
+      memlock: -1
+    stdin_open: true
     tty: true
-    stdin_open: true 
-    networks:
-      - ecat-net
-  
-networks:
-  ecat-net:
-    driver: bridge

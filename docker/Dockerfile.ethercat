@@ -1,131 +1,60 @@
-# DOCKER_BUILDKIT=1 docker build --ssh default -f docker/Dockerfile.ethercat -t ecat-dev:latest .
-# docker run --rm -it --name ecat-container --cap-add=SYS_NICE ecat-dev:latest
-FROM xenomai:latest
+# syntax=docker/dockerfile:1
+FROM dependencies AS ethercat
 
-ENV DEBIAN_FRONTEND=noninteractive
+ARG MASTER_VERSION=1.0.0
+ARG BUILD_JOBS=4
+ARG BUILD_GUI=ON
+ARG SOEM_REF=xeno3
+ARG CPPZMQ_REF=master
+ARG MATLOGGER_REF=master
+ARG ECAT_CLIENT_REF=main
 
-# Versions
-ENV SOEM_VERSION=xeno3
-ENV MATLOGGER2_VERSION=master
-ENV CPPZMQ_VERSION=master
-ENV ECAT_MASTER_ADVR_VERSION=feature/cia402_rev
-ENV ECAT_CLIENT_ADVR_VERSION=feature/novanta
+ENV ECAT_INSTALL_PREFIX=/ws/code_ws/install
+ENV CMAKE_PREFIX_PATH=/ws/code_ws/install
+ENV LD_LIBRARY_PATH=/ws/code_ws/install/lib
 
-# Workspace
-ENV WS_NAME=ecat_ws
-ENV WS_DIR=/root/${WS_NAME}
-ENV INSTALL_PREFIX=${WS_DIR}/install
-ENV SRC_DIR=${WS_DIR}/src
-ENV BUILD_DIR=${WS_DIR}/build
+WORKDIR /ws/code_ws
 
-# Build options
-ENV USE_XENO=ON
-ENV BUILD_GUI=OFF
+RUN git clone https://github.com/alessiomargan/SOEM.git src/SOEM \
+    && git -C src/SOEM checkout "${SOEM_REF}"
+RUN git clone https://github.com/zeromq/cppzmq.git src/cppzmq \
+    && git -C src/cppzmq checkout "${CPPZMQ_REF}"
+RUN git clone https://github.com/ADVRHumanoids/MatLogger2.git src/MatLogger2 \
+    && git -C src/MatLogger2 checkout "${MATLOGGER_REF}" \
+    && git -C src/MatLogger2 submodule update --init --recursive
+RUN git clone https://github.com/Advanced-Robotics-Facility/ecat-client-advr.git src/ecat-client-advr \
+    && git -C src/ecat-client-advr checkout "${ECAT_CLIENT_REF}" \
+    && git -C src/ecat-client-advr submodule update --init --recursive
 
-# Dependencies
-RUN apt update -y \
-    && apt install -y --no-install-recommends \
-        cmake-curses-gui \
-        net-tools \
-        openssh-server \
-        sshpass \
-        libgtest-dev \
-        libyaml-cpp-dev \
-        libfmt-dev \
-        libzmq3-dev \
-        protobuf-compiler \
-        libmsgpack-dev \
-        libboost-system-dev \
-        libeigen3-dev \
-        libmatio-dev \
-        python3-pip \
-        python3-yaml \
-        qt6-tools-dev \
-        qt6-declarative-dev \
-        libqt6charts6-dev \
-        uuid-dev \
-        libtiff-dev \
-        qttools5-dev \
-        libprotobuf-dev \
-        vim \
-        nano \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p install \
+    && curl --fail --location --retry 3 \
+      "https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup/releases/download/master-v${MASTER_VERSION}/ecat-master-${MASTER_VERSION}-ubuntu24.04-amd64-nrt.tar.gz" \
+      -o /tmp/ecat-master.tar.gz \
+    && tar --no-same-owner -xzf /tmp/ecat-master.tar.gz -C install \
+    && test -x install/bin/repl \
+    && rm /tmp/ecat-master.tar.gz
 
-# Workspace setup
-WORKDIR /root
-COPY create_ws.sh /root
-RUN chmod +x /root/create_ws.sh \
-    && /root/create_ws.sh ${WS_NAME} \
-    && rm /root/create_ws.sh
+RUN cmake -S src/SOEM -B build/SOEM \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
+      -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_USE_XENOMAI=OFF \
+    && cmake --build build/SOEM --parallel ${BUILD_JOBS} \
+    && cmake --install build/SOEM
 
-# Clone sources
-WORKDIR ${SRC_DIR}
-RUN git clone -b ${SOEM_VERSION} https://github.com/alessiomargan/SOEM.git \
-    && git clone -b ${CPPZMQ_VERSION} https://github.com/zeromq/cppzmq.git \
-    && git clone -b ${MATLOGGER2_VERSION} https://github.com/ADVRHumanoids/MatLogger2.git
+RUN cmake -S src/cppzmq -B build/cppzmq \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
+      -DCMAKE_INSTALL_LIBDIR=lib -DCPPZMQ_BUILD_TESTS=OFF -DBUILD_TESTING=OFF \
+    && cmake --build build/cppzmq --parallel ${BUILD_JOBS} \
+    && cmake --install build/cppzmq
 
-# SSH keys for private repos
-RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
-# Use --mount=type=ssh for private repositories
-# docker build --ssh default=~/.ssh/id_rsa .
-RUN --mount=type=ssh \
-    git clone -b ${ECAT_MASTER_ADVR_VERSION} git@github.com:Advanced-Robotics-Facility/ecat-master-advr.git \
-    && git clone -b ${ECAT_CLIENT_ADVR_VERSION} git@github.com:Advanced-Robotics-Facility/ecat-client-advr.git
+RUN cmake -S src/MatLogger2 -B build/MatLogger2 \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
+      -DCMAKE_INSTALL_LIBDIR=lib -DCOMPILE_PY_BINDINGS=OFF -DGEN_DEB=OFF -DGEN_DOCS=OFF \
+    && cmake --build build/MatLogger2 --parallel ${BUILD_JOBS} \
+    && cmake --install build/MatLogger2
 
-# Build SOEM
-WORKDIR ${BUILD_DIR}
-RUN mkdir -p SOEM && cd SOEM \
-    && cmake ${SRC_DIR}/SOEM -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        -DCMAKE_USE_XENOMAI=${USE_XENO} \
-    && make -j$(nproc) && make install
-
-# Build MatLogger2
-RUN mkdir -p MatLogger2 && cd MatLogger2 \
-    && cmake ${SRC_DIR}/MatLogger2 \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        -DCOMPILE_PY_BINDINGS=OFF \
-        -DGEN_DEB=OFF \
-    && make -j$(nproc) && make install
-
-# Build cppzmq
-RUN mkdir -p cppzmq && cd cppzmq \
-    && cmake ${SRC_DIR}/cppzmq \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        -DBUILD_TESTING=OFF \
-        -DCPPZMQ_BUILD_TESTS=OFF \
-    && make -j$(nproc) && make install
-
-# Workaround for ecat-master-advr set_cap.sh
-RUN printf '#!/bin/sh\nexit 0\n' > ${SRC_DIR}/ecat-master-advr/scripts/set_cap.sh \
-    && chmod +x ${SRC_DIR}/ecat-master-advr/scripts/set_cap.sh
-
-# Build ecat-master-advr
-RUN mkdir -p ecat-master-advr && cd ecat-master-advr \
-    && cmake ${SRC_DIR}/ecat-master-advr \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        -DCMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
-        -DBUILD_UDP_SRV=ON \
-        -DENABLE_XENO=${USE_XENO} \
-        -DCMAKE_CXX_FLAGS="-I${INSTALL_PREFIX}/include" \
-    && make -j$(nproc) && make install
-
-# Build ecat-client-advr
-RUN mkdir -p ecat-client-advr && cd ecat-client-advr \
-    && cmake ${SRC_DIR}/ecat-client-advr \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-        -DCOMPILE_GUI=${BUILD_GUI} \
-        -DENABLE_XENO=${USE_XENO} \
-    && make -j$(nproc) && make install
-
-# Environment variables
-ENV EC_CFG=${SRC_DIR}/ecat-client-advr/config/ec_cfg.yaml
-RUN echo "source ${WS_DIR}/setup.bash" >> /root/.bashrc \
-    && echo "export EC_CFG=${EC_CFG}" >> /root/.bashrc
-
-WORKDIR /root
-CMD ["/bin/bash"]
+RUN cmake -S src/ecat-client-advr -B build/ecat-client-advr \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
+      -DCMAKE_INSTALL_LIBDIR=lib -DENABLE_XENO=OFF -DCMAKE_USE_XENOMAI=OFF \
+      -DCOMPILE_GUI=${BUILD_GUI} -DCOMPILE_MATLAB=OFF \
+    && cmake --build build/ecat-client-advr --parallel ${BUILD_JOBS} \
+    && cmake --install build/ecat-client-advr

@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+FROM ros:jazzy-ros-base AS dependencies
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential cmake git curl ca-certificates gnupg pkg-config \
+      python3-colcon-common-extensions python3-rosdep python3-yaml \
+      libgtest-dev libyaml-cpp-dev libfmt-dev libzmq3-dev \
+      protobuf-compiler libprotobuf-dev libmsgpack-dev libboost-system-dev \
+      libeigen3-dev libmatio-dev libhdf5-dev zlib1g-dev \
+      qt6-tools-dev qt6-declarative-dev libqt6charts6-dev qttools5-dev \
+      uuid-dev libtiff-dev libcurl4-openssl-dev iproute2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dependencies needed for building the developed ROS2 packages (TODO: find a way to remove them)
+RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg \
+      -o /usr/share/keyrings/gazebo.gpg \
+    && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/gazebo.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable noble main' \
+      > /etc/apt/sources.list.d/gazebo.list \
+    && curl -fsSL https://advrhumanoids.github.io/XBotBuild/KEY.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/xbot.gpg \
+    && echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/xbot.gpg] https://advrhumanoids.github.io/XBotBuild/ubuntu/noble ./' \
+      > /etc/apt/sources.list.d/xbot.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      libgz-sim8-dev ros-jazzy-gz-sim-vendor xbot_env xbot2_interface \
+    && rm -rf /var/lib/apt/lists/*

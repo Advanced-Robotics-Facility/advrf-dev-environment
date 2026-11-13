@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1
+FROM ethercat AS workspace
+
+ARG BUILD_JOBS=4
+ARG ROS_WS_REF=jazzy_ec/main
+ARG MIRANDA_CONFIG_REF=main
+
+ENV ROS_DOMAIN_ID=0
+
+RUN git clone https://github.com/Advanced-Robotics-Facility/ws_advrf_ros2.git /ws/ros2_ws \
+    && git -C /ws/ros2_ws checkout "${ROS_WS_REF}" \
+    && git -C /ws/ros2_ws submodule update --init --recursive
+RUN git clone https://github.com/Advanced-Robotics-Facility/ecat-miranda-config.git \
+      /ws/configs/ecat-miranda-config \
+    && git -C /ws/configs/ecat-miranda-config checkout "${MIRANDA_CONFIG_REF}"
+COPY colcon.meta /ws/ros2_ws/colcon.meta
+
+WORKDIR /ws/ros2_ws
+
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi \
+    && rosdep update --rosdistro jazzy \
+    && apt-get update \
+    && rosdep install --from-paths src --ignore-src --rosdistro jazzy -y \
+      --skip-keys "xbot2_interface gz-sim8" \
+    && rm -rf /var/lib/apt/lists/*
+RUN source /opt/ros/jazzy/setup.bash \
+    && source /opt/xbot/setup.sh \
+    && CMAKE_BUILD_PARALLEL_LEVEL=${BUILD_JOBS} colcon build \
+      --symlink-install --executor sequential --cmake-args -DBUILD_TESTING=OFF
+
+RUN mkdir -p /root/.ecat_master/configs \
+    && cp -a ${ECAT_INSTALL_PREFIX}/share/ecat_master/configs/. /root/.ecat_master/configs/ \
+    && cp /ws/configs/ecat-miranda-config/robot_ecat/ecat_dummy_cfg.yaml \
+      /root/.ecat_master/configs/ecat_dummy_cfg.yaml \
+    && sed -i -E 's/^( *eth_iface:).*/\1 lo/' /root/.ecat_master/configs/nrt_config.yaml
+
+COPY setup.bash /ws/setup.bash
+RUN echo 'source /ws/setup.bash' >> /root/.bashrc
+
+WORKDIR /ws
+ENTRYPOINT ["/bin/bash", "-c", "source /ws/setup.bash && exec \"$@\"", "--"]
+CMD ["bash"]
