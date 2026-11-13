@@ -1,34 +1,35 @@
 # syntax=docker/dockerfile:1
 FROM dependencies AS ethercat
 
-ARG MASTER_VERSION=1.0.0
 ARG BUILD_JOBS=4
+
+ARG SOEM_VERSION=xeno3
+ARG CPPZMQ_VERSION=master
+ARG MATLOGGER_VERSION=master
+ARG ECAT_CLIENT_VERSION=main
+ARG ECAT_MASTER_VERSION=1.0.0
+
 ARG BUILD_GUI=ON
-ARG SOEM_REF=xeno3
-ARG CPPZMQ_REF=master
-ARG MATLOGGER_REF=master
-ARG ECAT_CLIENT_REF=main
 
 ENV ECAT_INSTALL_PREFIX=/ws/code_ws/install
-ENV CMAKE_PREFIX_PATH=/ws/code_ws/install
 ENV LD_LIBRARY_PATH=/ws/code_ws/install/lib
 
 WORKDIR /ws/code_ws
 
 RUN git clone https://github.com/alessiomargan/SOEM.git src/SOEM \
-    && git -C src/SOEM checkout "${SOEM_REF}"
+    && git -C src/SOEM checkout "${SOEM_VERSION}"
 RUN git clone https://github.com/zeromq/cppzmq.git src/cppzmq \
-    && git -C src/cppzmq checkout "${CPPZMQ_REF}"
+    && git -C src/cppzmq checkout "${CPPZMQ_VERSION}"
 RUN git clone https://github.com/ADVRHumanoids/MatLogger2.git src/MatLogger2 \
-    && git -C src/MatLogger2 checkout "${MATLOGGER_REF}" \
+    && git -C src/MatLogger2 checkout "${MATLOGGER_VERSION}" \
     && git -C src/MatLogger2 submodule update --init --recursive
 RUN git clone https://github.com/Advanced-Robotics-Facility/ecat-client-advr.git src/ecat-client-advr \
-    && git -C src/ecat-client-advr checkout "${ECAT_CLIENT_REF}" \
+    && git -C src/ecat-client-advr checkout "${ECAT_CLIENT_VERSION}" \
     && git -C src/ecat-client-advr submodule update --init --recursive
 
 RUN mkdir -p install \
     && curl --fail --location --retry 3 \
-      "https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup/releases/download/master-v${MASTER_VERSION}/ecat-master-${MASTER_VERSION}-ubuntu24.04-amd64-nrt.tar.gz" \
+      "https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup/releases/download/master-v${ECAT_MASTER_VERSION}/ecat-master-${ECAT_MASTER_VERSION}-ubuntu24.04-amd64-nrt.tar.gz" \
       -o /tmp/ecat-master.tar.gz \
     && tar --no-same-owner -xzf /tmp/ecat-master.tar.gz -C install \
     && test -x install/bin/repl \

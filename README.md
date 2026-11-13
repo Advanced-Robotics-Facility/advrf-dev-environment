@@ -15,11 +15,7 @@ branch.
 
 ## Local installation
 
-Use Ubuntu 24.04. The precompiled non-RT master supports amd64 (Intel/AMD
-64-bit processors). Building the master from source requires access to the
-private `ecat-master-advr` repository.
-
-Clone this branch and run the installer as your regular user, without `sudo`:
+Clone this branch and run the installer:
 
 ```bash
 git clone --branch feature/non-rt-docker-workspace \
@@ -37,7 +33,7 @@ the dialogs:
    existing build options, but this branch supplies the non-RT environment.
 3. Enable GUI tools if you need the EtherCAT GUI.
 4. Select the dependencies and all packages for a complete installation.
-5. Select **package** for the master on Ubuntu 24.04 amd64. Select **source**
+5. Select **package** for the master. Select **source**
    only if you have access to the private repository and need to build it.
 
 The installer creates `src/`, `build/`, `install/`, and `setup.bash`, builds
@@ -48,35 +44,7 @@ Load it in your terminal after installation:
 source ~/ws/code_ws/setup.bash
 ```
 
-Set `EC_CFG` to your robot's client configuration. To use the generic client
-configuration as a starting point:
-
-```bash
-export EC_CFG=~/ws/code_ws/src/ecat-client-advr/config/ec_cfg.yaml
-```
-
-This installer installs the EtherCAT stack. ROS and robot configuration are
-set up separately for a local installation. The container installation
-includes all three workspaces for Miranda development.
-
-## Create a workspace without installing packages
-
-`create_ws.sh` remains available independently:
-
-```bash
-./create_ws.sh code_ws /home/your-user/ws
-source /home/your-user/ws/code_ws/setup.bash
-```
-
-The parent directory must already exist. If omitted, the parent defaults to
-`$HOME`. The script creates an empty CMake workspace and its environment;
-it does not download repositories or install dependencies.
-
 ## Docker installation
-
-Install Docker Engine with the Compose plugin, or Docker Desktop with WSL
-integration when using WSL. The `docker/` folder is self-contained and can be
-copied anywhere; no host source workspaces are required.
 
 From this repository:
 
