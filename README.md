@@ -19,8 +19,8 @@ Clone this branch and run the installer:
 
 ```bash
 git clone --branch feature/non-rt-docker-workspace \
-  https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup.git
-cd xenomai-ethercat-setup
+  https://github.com/Advanced-Robotics-Facility/advrf-dev-environment.git
+cd advrf-dev-environment
 ./build_ecat.sh
 ```
 
@@ -57,7 +57,7 @@ docker compose exec workspace bash
 Or from any working directory:
 
 ```bash
-docker compose -f /path/to/xenomai-ethercat-setup/docker/compose.yaml up -d --build
+docker compose -f /path/to/advrf-dev-environment/docker/compose.yaml up -d --build
 ```
 
 The three Dockerfiles build system dependencies, the non-RT EtherCAT stack,

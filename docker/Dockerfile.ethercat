@@ -29,7 +29,7 @@ RUN git clone https://github.com/Advanced-Robotics-Facility/ecat-client-advr.git
 
 RUN mkdir -p install \
     && curl --fail --location --retry 3 \
-      "https://github.com/Advanced-Robotics-Facility/xenomai-ethercat-setup/releases/download/master-v${ECAT_MASTER_VERSION}/ecat-master-${ECAT_MASTER_VERSION}-ubuntu24.04-amd64-nrt.tar.gz" \
+      "https://github.com/Advanced-Robotics-Facility/advrf-dev-environment/releases/download/master-v${ECAT_MASTER_VERSION}/ecat-master-${ECAT_MASTER_VERSION}-ubuntu24.04-amd64-nrt.tar.gz" \
       -o /tmp/ecat-master.tar.gz \
     && tar --no-same-owner -xzf /tmp/ecat-master.tar.gz -C install \
     && test -x install/bin/repl \
