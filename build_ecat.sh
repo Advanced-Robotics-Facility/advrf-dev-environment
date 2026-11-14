@@ -11,7 +11,7 @@ ECAT_CLIENT_ADVR_VERSION=main
 # Precompiled master release (Ubuntu 24.04, amd64, non-RT)
 MASTER_BINARY_VERSION=1.0.0
 MASTER_BINARY_TAG="master-v${MASTER_BINARY_VERSION}"
-MASTER_BINARY_REPO=Advanced-Robotics-Facility/at-setup
+MASTER_BINARY_REPO=Advanced-Robotics-Facility/advrf-dev-environment
 MASTER_BINARY_ARCHIVE="ecat-master-${MASTER_BINARY_VERSION}-ubuntu24.04-amd64-nrt.tar.gz"
 MASTER_BINARY_URL="https://github.com/${MASTER_BINARY_REPO}/releases/download/${MASTER_BINARY_TAG}/${MASTER_BINARY_ARCHIVE}"
 
