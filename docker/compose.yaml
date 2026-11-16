@@ -33,10 +33,14 @@ services:
         BUILD_JOBS: ${BUILD_JOBS:-4}
     network_mode: host
     environment:
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
       DISPLAY: ${DISPLAY:-}
       QT_X11_NO_MITSHM: '1'
       XAUTHORITY: /tmp/host.xauthority
+      XDG_RUNTIME_DIR: /tmp/runtime-root
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    tmpfs:
+      - /tmp/runtime-root:mode=0700,uid=0,gid=0
     volumes:
       - ${X11_SOCKET_DIR:-/tmp/.X11-unix}:/tmp/.X11-unix:ro
       - ${XAUTHORITY:-/dev/null}:/tmp/host.xauthority:ro
@@ -47,3 +51,5 @@ services:
       memlock: -1
     stdin_open: true
     tty: true
+    devices:
+      - /dev/input/:/dev/input/
