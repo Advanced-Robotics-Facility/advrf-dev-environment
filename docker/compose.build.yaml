@@ -1,0 +1,31 @@
+services:
+  dependencies:
+    image: miranda-dependencies:jazzy
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.dependencies
+
+  ethercat:
+    image: miranda-ethercat:jazzy
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.ethercat
+      additional_contexts:
+        dependencies: service:dependencies
+      args:
+        BUILD_JOBS: ${BUILD_JOBS:-}
+        BUILD_GUI: ${BUILD_GUI:-ON}
+        MASTER_VERSION: ${MASTER_VERSION:-1.0.0}
+
+  workspace:
+    image: miranda-workspace:jazzy
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.ros
+      additional_contexts:
+        ethercat: service:ethercat
+      args:
+        BUILD_JOBS: ${BUILD_JOBS:-}

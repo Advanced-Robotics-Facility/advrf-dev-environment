@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM dependencies AS ethercat
 
-ARG BUILD_JOBS=4
+ARG BUILD_JOBS
 
 ARG SOEM_VERSION=xeno3
 ARG CPPZMQ_VERSION=master
@@ -38,24 +38,24 @@ RUN mkdir -p install \
 RUN cmake -S src/SOEM -B build/SOEM \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
       -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_USE_XENOMAI=OFF \
-    && cmake --build build/SOEM --parallel ${BUILD_JOBS} \
+    && cmake --build build/SOEM --parallel "${BUILD_JOBS:-$(nproc)}" \
     && cmake --install build/SOEM
 
 RUN cmake -S src/cppzmq -B build/cppzmq \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
       -DCMAKE_INSTALL_LIBDIR=lib -DCPPZMQ_BUILD_TESTS=OFF -DBUILD_TESTING=OFF \
-    && cmake --build build/cppzmq --parallel ${BUILD_JOBS} \
+    && cmake --build build/cppzmq --parallel "${BUILD_JOBS:-$(nproc)}" \
     && cmake --install build/cppzmq
 
 RUN cmake -S src/MatLogger2 -B build/MatLogger2 \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
       -DCMAKE_INSTALL_LIBDIR=lib -DCOMPILE_PY_BINDINGS=OFF -DGEN_DEB=OFF -DGEN_DOCS=OFF \
-    && cmake --build build/MatLogger2 --parallel ${BUILD_JOBS} \
+    && cmake --build build/MatLogger2 --parallel "${BUILD_JOBS:-$(nproc)}" \
     && cmake --install build/MatLogger2
 
 RUN cmake -S src/ecat-client-advr -B build/ecat-client-advr \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ECAT_INSTALL_PREFIX} \
       -DCMAKE_INSTALL_LIBDIR=lib -DENABLE_XENO=OFF -DCMAKE_USE_XENOMAI=OFF \
       -DCOMPILE_GUI=${BUILD_GUI} -DCOMPILE_MATLAB=OFF \
-    && cmake --build build/ecat-client-advr --parallel ${BUILD_JOBS} \
+    && cmake --build build/ecat-client-advr --parallel "${BUILD_JOBS:-$(nproc)}" \
     && cmake --install build/ecat-client-advr

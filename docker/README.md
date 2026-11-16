@@ -15,7 +15,8 @@ Compose declares the image dependencies and builds them in that order. The files
 | `Dockerfile.ros` | Build the ROS workspace and seed dummy defaults |
 | `colcon.meta` | Container paths and non-RT ROS build settings |
 | `setup.bash` | Load the environment in container shells |
-| `compose.yaml` | Build and run the container, including networking and display forwarding |
+| `compose.build.yaml` | Build the three images in dependency order |
+| `compose.yaml` | Run the workspace, including networking and display forwarding |
 
 ## Build and open a shell
 
@@ -23,7 +24,7 @@ From this folder:
 
 ```bash
 cd /path/to/docker
-docker compose build workspace
+docker compose -f compose.build.yaml build workspace
 docker compose up -d
 docker compose exec workspace bash
 ```
@@ -31,11 +32,22 @@ docker compose exec workspace bash
 Or run from any working directory:
 
 ```bash
-docker compose -f /path/to/docker/compose.yaml up -d --build
+docker compose -f /path/to/docker/compose.build.yaml build workspace
+docker compose -f /path/to/docker/compose.yaml up -d
 ```
 
-**Note:** Build parallelism defaults to four jobs to limit memory use. Override it with
-`BUILD_JOBS=8 docker compose build`.
+Build parallelism defaults to the CPU count available inside the build container
+(`nproc`). Override it with
+`BUILD_JOBS=8 docker compose -f compose.build.yaml build workspace`.
+
+For a build without cached layers:
+
+```bash
+docker compose -f compose.build.yaml build --no-cache workspace
+```
+
+The runtime file has no build configuration or profiles. `docker compose up -d`
+uses the existing workspace image; build it first with the build file above.
 
 
 `docker compose exec` should use

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM ethercat AS workspace
 
-ARG BUILD_JOBS=4
+ARG BUILD_JOBS
 ARG ROS_WS_VERSION=jazzy_ec/main
 ARG MIRANDA_CONFIG_VERSION=main
 
@@ -26,7 +26,7 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init
     && rm -rf /var/lib/apt/lists/*
 RUN source /opt/ros/jazzy/setup.bash \
     && source /opt/xbot/setup.sh \
-    && CMAKE_BUILD_PARALLEL_LEVEL=${BUILD_JOBS} colcon build \
+    && CMAKE_BUILD_PARALLEL_LEVEL="${BUILD_JOBS:-$(nproc)}" colcon build \
       --symlink-install --executor sequential --cmake-args -DBUILD_TESTING=OFF
 
 RUN mkdir -p /root/.ecat_master/configs \
