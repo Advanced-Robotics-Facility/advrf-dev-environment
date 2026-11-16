@@ -50,14 +50,16 @@ From this repository:
 
 ```bash
 cd docker
-docker compose up -d --build
+docker compose -f compose.build.yaml build workspace
+docker compose up -d
 docker compose exec workspace bash
 ```
 
 Or from any working directory:
 
 ```bash
-docker compose -f /path/to/advrf-dev-environment/docker/compose.yaml up -d --build
+docker compose -f /path/to/docker/compose.build.yaml build workspace
+docker compose -f /path/to/docker/compose.yaml up -d
 ```
 
 The three Dockerfiles build system dependencies, the non-RT EtherCAT stack,
