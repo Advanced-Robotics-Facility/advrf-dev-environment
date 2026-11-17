@@ -35,6 +35,10 @@ RUN mkdir -p /root/.ecat_master/configs \
       /root/.ecat_master/configs/ecat_dummy_cfg.yaml \
     && sed -i -E 's/^( *eth_iface:).*/\1 lo/' /root/.ecat_master/configs/nrt_config.yaml
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY setup.bash /ws/setup.bash
 RUN echo 'source /ws/setup.bash' >> /root/.bashrc
 

@@ -4,7 +4,8 @@ services:
     platform: linux/amd64
     network_mode: host
     environment:
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+      ROS_DOMAIN_ID: '42'
+      # ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
       DISPLAY: ${DISPLAY:-}
       QT_X11_NO_MITSHM: '1'
       XAUTHORITY: /tmp/host.xauthority
@@ -15,6 +16,10 @@ services:
     volumes:
       - ${X11_SOCKET_DIR:-/tmp/.X11-unix}:/tmp/.X11-unix:ro
       - ${XAUTHORITY:-/dev/null}:/tmp/host.xauthority:ro
+      - ../ros2_overlay/src:/ws/user_ros2_ws/src
+      - ros2_user_build:/ws/user_ros2_ws/build
+      - ros2_user_install:/ws/user_ros2_ws/install
+      - ros2_user_log:/ws/user_ros2_ws/log
     cap_add:
       - SYS_NICE
     ulimits:
@@ -24,3 +29,8 @@ services:
     tty: true
     devices:
       - /dev/input/:/dev/input/
+
+volumes:
+  ros2_user_build:
+  ros2_user_install:
+  ros2_user_log:
