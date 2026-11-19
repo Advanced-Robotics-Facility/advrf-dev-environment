@@ -10,7 +10,7 @@ Compose declares the image dependencies and builds them in that order. The files
 
 | File | Purpose |
 | --- | --- |
-| `Dockerfile.dependencies` | Install ROS build tools, system libraries, Gazebo, and XBot (momentarily) |
+| `Dockerfile.dependencies` | Install ROS build tools, system libraries, and Gazebo |
 | `Dockerfile.ethercat` | Install the master and build the EtherCAT libraries and GUI |
 | `Dockerfile.ros` | Build the ROS workspace and seed dummy defaults |
 | `colcon.meta` | Container paths and non-RT ROS build settings |
@@ -57,7 +57,7 @@ uses the existing workspace image; build it first with the build file above.
 docker compose exec workspace bash -ic 'ros2 pkg list'
 ```
 
-The entrypoint and every interactive Bash shell load ROS, XBot, EtherCAT,
+The entrypoint and every interactive Bash shell load ROS, EtherCAT,
 Miranda configuration, and the ROS overlay. 
 
 Stop with:

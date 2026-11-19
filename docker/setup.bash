@@ -1,5 +1,4 @@
 source /opt/ros/jazzy/setup.bash
-source /opt/xbot/setup.sh
 export ECAT_INSTALL_PREFIX=/ws/code_ws/install
 export CMAKE_PREFIX_PATH="${ECAT_INSTALL_PREFIX}${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
 export LD_LIBRARY_PATH="${ECAT_INSTALL_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
